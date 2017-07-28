@@ -3,9 +3,26 @@
 """
 Created on Tue Jun 27 15:47:31 2017
 
-@author: Daniel
+@author: Daniel O'Sullivan
 """
+'''
 
+This script relies on the files being organized correctly (see organizer.py)
+This script does the following:
+1)Grab datetimes from bigNipi files 
+2)Pulls APS data with corresponding timestamps in the duration of bigNipi runs. Gets SUM of counts
+3)Pulls SMPS data with corresponding timestamps in the duration of bigNipi runs. Gets SUM of counts
+4)Gets INP(T) calculated from INP_T script
+5) Makes a pretty graph
+    
+Known issues: 
+    a) the current setup relies on there being a bigNipi file in the organized folder, 
+otherwise it won't pull the APS-SMPS data. Also, SMPS and microlitre-nipi 
+are not operational yet
+    b) currently, this only works for one INP(T)    
+    
+    
+'''    
 import socket
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -43,7 +60,7 @@ a= glob.glob(indir+'/*/')
 df_summary=pd.DataFrame(columns = {'start_datetime', 'end_datetime',
                                     'APS_count', 'SMPS_count'})
 dict_INPs={}
-df_meta=pd.DataFrame()
+df_meta=pd.DataFrame() #df_meta is a sort of 'overview' dataframe
 df_smps=pd.DataFrame()
 df_APS=pd.DataFrame(columns =[  u'<0.523', u'0.542',
        u'0.583', u'0.626', u'0.673', u'0.723', u'0.777', u'0.835', u'0.898',
@@ -63,8 +80,8 @@ df_APSreader=pd.DataFrame(columns =[  u'<0.523', u'0.542',
        u'7.234', u'7.774', u'8.354', u'8.977', u'9.647', u'10.37', u'11.14',
        u'11.97', u'12.86', u'13.82', u'14.86', u'15.96', u'17.15', u'18.43',
        u'19.81', u'datetime'])
-
-    
+#%%
+   #1)Grab datetimes from bigNipi files
 def get_data(indir):
     os.chdir(indir)
     b=glob.glob('bigN*.txt')##
@@ -111,9 +128,11 @@ def get_data(indir):
     
             
 
-     
+#%%     
 #APS SECTION
+#2)Pulls APS data with corresponding timestamps in the duration of bigNipi runs. Gets SUM of counts
 
+    
     os.chdir(indir+'APS')
     #print os.getcwd()
     global df_APS, df_out
@@ -129,7 +148,7 @@ def get_data(indir):
     cols = cols[-1:] + cols[:-1]
     df_APS=df_APS[cols]
 
-#Averaging
+#Get the SUM
     apsavs=pd.DataFrame()
     aps_total =pd.DataFrame()
     missing_aps=[]
@@ -162,6 +181,9 @@ def get_data(indir):
         df_meta['APS']= aps_total.T
          
 #SMPS Section
+#3)Pulls SMPS data with corresponding timestamps in the duration of bigNipi runs. Gets SUM of counts
+#%%
+
     missing_smps=[]
     if 'SMPS' in os.listdir(indir):
        
@@ -197,8 +219,8 @@ def get_data(indir):
             df_smps = df_smps.iloc[:,1:].astype(float)
             df_smps.insert(0,'datetimes', datetimes)
            # df_smps.iloc[0:, 1:] = df_smps.iloc[0:, 1:].astype(float)
-
-#Averaging
+#%%
+#Averaging (should be SUM????)
     smps_avs = pd.DataFrame()
     smps_total=pd.DataFrame()
     
@@ -231,7 +253,7 @@ def get_data(indir):
                  #print 'Warning: SMPS averages is zero for {}'.format(dayfolder)
     
     return (df_meta)
-            
+#%%   LOOPS get_data function         
 
 df_out = pd.DataFrame()
 for i in range(len(a)):
@@ -267,14 +289,15 @@ def timefix(time):
     
     correct_time = datetime.strptime(str((time)), '%Y-%m-%d %H:%M:%S')
     return correct_time
-#%%
+#%% 4)Gets INP(T) calculated from INP_T script
+
+    
 INPs['start']=INPs['start'].apply(timefix)
 INPs['end']=INPs['end'].apply(timefix)
 
 
 df_out.reset_index(inplace = True)
 
-#%%
 df_INP=pd.DataFrame()
 #for i in range(len(df_out)):
 for i in range(len(df_out)):
@@ -286,7 +309,7 @@ for i in range(len(df_out)):
         else:
             
              df_INP = df_INP.append(INPs.loc[INP_mask], ignore_index=True)
-#%%
+
 if df_INP.empty:
         pass
 else:       
@@ -294,7 +317,7 @@ else:
     df_out['INPs'] =df_INP['INP']
 
 #df_out.dropna(axis=0, inplace = True)
-#%%
+#%% 
 try:
     df_out['Date']=df_out.start.dt.date
     notes_out =pd.DataFrame ([i for i in zip(notes_date, note)], 
@@ -308,7 +331,7 @@ try:
 
 except AttributeError:
     pass
-#%%
+#%%5) Makes a pretty graph
 fig, ax1 = plt.subplots()
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
 line1, = ax1.plot(df_out['end'],df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle =':', marker='.') 
