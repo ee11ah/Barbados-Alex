@@ -32,7 +32,7 @@ import os
 import matplotlib.dates as mdates
 import matplotlib.patches as patches
 from datetime import datetime
-
+import datetime as dt
 #barbados
 indir = 'C:\\Users\\useradmin\\Desktop\\Barbados Data'
 
@@ -80,15 +80,15 @@ df_APSreader=pd.DataFrame(columns =[  u'<0.523', u'0.542',
        u'7.234', u'7.774', u'8.354', u'8.977', u'9.647', u'10.37', u'11.14',
        u'11.97', u'12.86', u'13.82', u'14.86', u'15.96', u'17.15', u'18.43',
        u'19.81', u'datetime'])
-#%%
+
    #1)Grab datetimes from bigNipi files
-def get_data(indir):
-    os.chdir(indir)
-    b=glob.glob('bigN*.txt')##
+def get_data(dayfolder):
+    os.chdir(dayfolder)
+    b=glob.glob('bigN*.csv')##
     missing_NIPI=[]
     global smps_counter, counter,df_smps
     global df_meta, notes_loc, notes_date, notes
-    global dict_INPs
+    global dict_INPs, b
     if not a:
         no_data_flag=1
         print 'NIPI *Data.CSV files missing {}'.format(analysis_day)
@@ -97,22 +97,33 @@ def get_data(indir):
         no_data_flag=0
         
         for i in range(len(b)):
-            
+            print b
             #start= a[i][5:11]+"_"+a[i][12:16]
             #end = a[i][5:11]+"_"+a[i][17:21]
-            start= b[i][5:11]+"_"+b[i][17:21]
-            end = b[i][5:11]+"_"+b[i][22:26]
-            
+            start= b[i][5:11]+"_"+b[i][12:16]
+            end = b[i][5:11]+"_"+b[i][17:21]
+            print b[i][17:21]
             start_datetime = datetime.strptime(start, '%y%m%d_%H%M')
+        
             end_datetime =  datetime.strptime(end, '%y%m%d_%H%M')
+            
+            if 'ON' in b[i]:
+                end_datetime = (end_datetime + dt.timedelta(days=1))
+                print 'ON in filename'
+            else:
+               end_datetime =  datetime.strptime(end, '%y%m%d_%H%M')
+            print ('end datetime is {}').format(end_datetime)   
+            global end_datetime, dt_end
             df_meta= df_meta.append(pd.DataFrame({'start':[start_datetime], 'end':[end_datetime]}),ignore_index = True)
+            
             dict_INPs[start_datetime]=pd.read_csv(b[i], delimiter =",", header =0)
             cols=df_meta.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             df_meta=df_meta[cols]
-            print df_meta
+            #print df_meta
+            global df_meta,B
       
-    notes_loc = glob.glob(indir+'/*note*.txt')
+    notes_loc = glob.glob(dayfolder+'/*note*.txt')
     for i in range(len(notes_loc)):
         
         if notes_loc[i] == []:
@@ -122,25 +133,26 @@ def get_data(indir):
            
             
             notes_date.append(datetime.strptime(
-                    [notes_loc[0].replace(indir,"")][0][0:6], '%y%m%d %h%M'))
+                    [notes_loc[0].replace(dayfolder,"")][0][0:6], '%y%m%d %h%M'))
             note.append(text_read.read())
            # print ('comment is {}'.format(note[i]))
     
             
 
-#%%     
+   
 #APS SECTION
 #2)Pulls APS data with corresponding timestamps in the duration of bigNipi runs. Gets SUM of counts
 
     
-    os.chdir(indir+'APS')
+    os.chdir(dayfolder+'APS')
     #print os.getcwd()
     global df_APS, df_out
     x=glob.glob('*.txt')
     for i in range(len(x)):
-        print x[i]
+        #print x[i]
+        global x
         df_APSreader=pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 4:56] 
-        print df_APSreader.head()
+#%%
         df_APSreader['datetime']=pd.to_datetime (pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 1]+" "+
           pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 2])
         df_APS=df_APS.append(df_APSreader)
@@ -155,8 +167,10 @@ def get_data(indir):
     #x=pd.DataFrame({'x':0})
     for i in range(len(df_meta)):
         
+        
         aps_mask=  (df_APS['datetime'] > df_meta['start'][i]) & (df_APS['datetime'] <=  df_meta['end'][i])
         if df_APS.loc[aps_mask]['datetime'].empty:
+            #print 'aps mask not working'
             #apsavs.append(pd.DataFrame(x))
             continue
         
@@ -174,7 +188,7 @@ def get_data(indir):
         #print 'else'
         apsavs = pd.concat (frames1, axis =1, ignore_index= False, join= 'outer')
         aps_total= aps_total.append(apsavs.sum(axis=1),ignore_index=True)
-        print aps_total
+        #print aps_total
         cols=apsavs.columns.tolist()
         cols = cols[-2:] + cols[:-2]
         apsavs = apsavs[cols]
@@ -185,12 +199,12 @@ def get_data(indir):
 #%%
 
     missing_smps=[]
-    if 'SMPS' in os.listdir(indir):
+    if 'SMPS' in os.listdir(dayfolder):
        
         counter +=1
         
         df_smps = pd.DataFrame()
-        os.chdir(indir+'SMPS')
+        os.chdir(dayfolder+'SMPS')
         z=glob.glob('*.csv')
         
         if not z:
@@ -265,7 +279,7 @@ for i in range(len(a)):
     df_meta=pd.DataFrame()
     
     #pdb.set_trace()
-    #print dayfolder
+    print dayfolder
     get_data(dayfolder)
     df_out=df_out.append(df_meta)
 #%%
@@ -293,7 +307,7 @@ def timefix(time):
 
     
 INPs['start']=INPs['start'].apply(timefix)
-INPs['end']=INPs['end'].apply(timefix)
+INPs['end_date']=INPs['end_date'].apply(timefix)
 
 
 df_out.reset_index(inplace = True)
@@ -301,7 +315,7 @@ df_out.reset_index(inplace = True)
 df_INP=pd.DataFrame()
 #for i in range(len(df_out)):
 for i in range(len(df_out)):
-        INP_mask=  (INPs['start'] == df_out['start'][i]) & (INPs['end'] ==  df_out['end'][i])
+        INP_mask=  (INPs['start'] == df_out['start'][i]) & (INPs['end_date'] ==  df_out['end'][i])
         if INPs.loc[INP_mask].empty:
             print 'empty'
             continue
@@ -328,18 +342,22 @@ try:
     df_out = df_out.drop(u'level_0', errors ='ignore').set_index('Date').join(
             notes_out.set_index('date'),  how ='left')
     df_out.drop(df_out.columns[0], axis =1, inplace =True)
-
+    
 except AttributeError:
     pass
+
 #%%5) Makes a pretty graph
+df_out.sort_values(by='start', inplace = True)
 fig, ax1 = plt.subplots()
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-line1, = ax1.plot(df_out['end'],df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle =':', marker='.') 
+line1, = ax1.plot(df_out['end'],df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle ='', marker='.') 
 line2, = ax1.plot(df_out['end'],df_out['APS'], color = 'green', label ='APS count',marker='.',linestyle =':')
    
 
 end=np.asarray(df_out['end'])
 INP=np.asarray(df_out['INPs'])
+
+
 
 ax1.set_ylabel('particles cm$^{-3}$')
 ax1.set_xlabel('Date')
@@ -351,7 +369,7 @@ ax2= ax1.twinx()
 dots = ax2.scatter(end, INP, color = 'red', label = 'BigNipi @-10 '+degree_sign+'C',s=15 )
 ax2.set_ylabel('INPs L$^{-1}$')
 ax2.set_yscale('log')
-ax2.set_ylim(1,1000)
+ax2.set_ylim(0.1,10)
 ax1.legend(frameon= False)
 ax2.legend(loc = 'upper left', bbox_to_anchor = (0,0.865), frameon =False)
 

@@ -50,11 +50,12 @@ os.chdir(source+'bigN//')
 bigN_files = [i for i in  glob.glob('*bigN*.csv*')]
 bigN_dates = [i[5:11] for i in bigN_files]
 bigN_dates= list(set(bigN_dates))
+
 #%%
 for i in range(len(bigN_files)):
     dt_start = datetime.datetime.strptime(bigN_files[i][5:16],'%y%m%d %H%M')
     d_start = datetime.datetime.strptime(bigN_files[i][5:11], '%y%m%d')
-    time_end=datetime.datetime.strptime(bigN_files[i][18:22], '%H%M')
+    time_end=datetime.datetime.strptime(bigN_files[i][17:21], '%H%M')
     
     if 'ON' in bigN_files[i]:
         dt_end = (datetime.datetime.combine(dt_start.date() + datetime.timedelta(days=1),
@@ -77,27 +78,33 @@ for i in range(len(bigN_files)):
    
     else:
 
-        for f in range(len(bigN_files)):
-            
-            df_INPbig =pd.read_csv(bigN_files[f], delimiter =',',
-                                 index_col = False,dtype ={'temp': np.float64}, names=['temp'])
-            
-            count=len(df_INPbig)
-          
-            Fraction = df_INPbig.groupby('temp').temp.count().sort_index(ascending = False).cumsum()/len(df_INPbig)
-            df_out = Fraction.apply(INP_calc)
-            
+        f=i
+        #print bigN_files[f]
+        df_INPbig =pd.read_csv(bigN_files[f], delimiter =',',
+                             index_col = False,dtype ={'temp': np.float64}, names=['temp'])
+      #  print df_INPbig.head()
+        count=len(df_INPbig)
+      
+       
+        Fraction = df_INPbig.groupby('temp').temp.count().sort_index(ascending = False).cumsum()/len(df_INPbig)
+        #print Fraction.head()
+        df_out = Fraction.apply(INP_calc)
+        #print df_out.head()
 #%%
 
   
-    for i in range(len(bigN_files)):
-        path = (Organized+bigN_dates[i]+'//').strip()
-        if not os.path.exists(Organized+bigN_dates[i]):
-            os.mkdir(Organized+bigN_dates[i])
+
+        
+        fdate = bigN_files[i][5:11]
+        path = (Organized+fdate+'//').strip()
+        if not os.path.exists(Organized+fdate):
+            os.mkdir(Organized+fdate)
             
-        if not os.path.exists(Organized+bigN_dates[i]+'//bigN//'):
-            os.mkdir(Organized+bigN_dates[i]+'//bigN//')
-    
-    df_out.to_csv(Organized+bigN_dates[i]+'//'+bigN_files[0].strip('.txt'))
-    
-    
+        if not os.path.exists(Organized+fdate+'//bigN//'):
+            os.mkdir(Organized+fdate+'//bigN//')
+       # print i,bigN_files[i]
+        df_out.to_csv(Organized+fdate+'//'+bigN_files[i].strip('.txt'))
+        print bigN_files[i]
+        print df_out.head()
+        #print Organized+fdate+'//'+bigN_files[i].strip('.txt')
+

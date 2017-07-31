@@ -69,7 +69,7 @@ fday=[]
 day=[]
 date=[]
 Tlist=[]
-
+end_d=[]
 # dayp=[]
 fdayp=[]
 excels_list=[]
@@ -98,9 +98,9 @@ number_days=len(paths)
 
 for T in range(-10,-9):
     
-    for i in range(0,2):
+    for i in range(len(paths)):
         extension = 'csv'
-        path=paths[i]
+        path=paths[i]+'\\'
         if not os.path.isdir(path):
             continue
         else:
@@ -119,22 +119,32 @@ for T in range(-10,-9):
                     df2=df.drop_duplicates(['T'], keep = 'last')
                     data=df2.as_matrix()
                     #print(len(data))
-                    filename=excels[i]          
-                    day.append(path[-6:-4]+'-'+path[-4:-2]+'-'+path[-2:])
+                    filename=str(excels[i])          
+                    day.append(path[-7:-5]+'-'+path[-5:-3]+'-'+path[-3:-1])
                     
-                    fday.append(path[-6:-4]+path[-4:-2]+path[-2:]+filename[17:22]+filename[22:26])
+                    fday.append(path[-7:-5]+path[-5:-3]+path[-3:-1]+filename[17:21]+filename[-4:])
+                    print ('check is {}').format(filename[17:21]+filename[-4:], fday)
                     start_t.append(filename[12:16])
-                    end_t.append(filename[18:22])
+                    
+                    end_t.append(filename[17:21])
+                    if 'ON' in excels[i]:
+                        print 'ON found a'
+                        end_d.append(str(int(filename[5:11])+1))
+                    else:
+                        end_d.append(filename[5:11])
+                        
                     Tlist.append(T)
                     #print(filename)
                     #%%
                     try:
-                        filename=int((filename[5:11])+(filename[12:16])+(filename[18:22]))
+                        filename=str((filename[5:11])+(filename[12:16])+(filename[17:21]))
                     except ValueError:
                         #print(filename)
                         filename='nan'
                         pass
-                    time_run.append(filename)
+
+                    time_run.append(filename[0:6])
+                    
                     try:
                         
                         for i in range(0,len(data)):
@@ -195,7 +205,10 @@ for T in range(-10,-9):
                         pass
     
                     if INP_Tlist:
+                        
+                        
                         x=np.vstack((time_run, start_t))
+                        x=np.vstack((x, end_d))
                         x=np.vstack((x, end_t))
                         x=np.vstack((x, INP_Tlist))
                         x=np.vstack((x, Tlist))
@@ -207,11 +220,21 @@ for T in range(-10,-9):
 
     #np.savetxt(day_folder+'INP output.csv',INP_Tlist,delimiter=',')
 
-df3=pd.DataFrame(x, columns = ['Date', 'start', 'end', 'INP', 'T'])
+df3=pd.DataFrame(x, columns = ['startdate', 'start', 'end_date','end_time', 'INP', 'T'])
 df3=df3[df3!='before'];df3=df3[df3!='below'];
 df3['INP']=df3['INP'].astype(float)
 df3['T']=df3['T'].astype(float)
+for i in range(len(df3)):
+    df3['startdate'][i] = datetime.datetime.strptime(df3['startdate'][i][0:6],'%y%m%d')
+    
+for i in range(len(df3)):
+    df3['start'][i] = datetime.datetime.combine(df3['startdate'][i],datetime.datetime.strptime(df3['start'][i][0:6],'%H%M').time())
+    
+for i in range(len(df3)):
+    df3['end_date'][i] = datetime.datetime.combine(datetime.datetime.strptime(df3['end_date'][i],'%y%m%d'),datetime.datetime.strptime(df3['end_time'][i][0:6],'%H%M').time())
+    
 
+df3.to_csv(out_folder+"bigN_INPs at " +num2words[T]+".csv")
 #d3=df[df.INP!='inf'] 
 #df3.to_csv(out_folder+"INPs.csv")
 ax1=df3.plot.scatter(x='T', y='INP', logy=True)
@@ -227,17 +250,8 @@ ax2=df5.plot.box(logy=True)
 fig = ax2.get_figure()
 #fig.savefig(out_folder+keyword+'boxplots')
 
-for i in range(len(df3)):
-    df3['Date'][i] = datetime.datetime.strptime(df3['Date'][i][0:6],'%y%m%d')
-    
-for i in range(len(df3)):
-    df3['start'][i] = datetime.datetime.combine(df3['Date'][i],datetime.datetime.strptime(df3['start'][i][0:6],'%H%M').time())
-    
-for i in range(len(df3)):
-    df3['end'][i] = datetime.datetime.combine(df3['Date'][i],datetime.datetime.strptime(df3['end'][i][0:6],'%H%M').time())
-    
-df3.Date
-df3.to_csv(out_folder+"bigN_INPs at " +num2words[T]+".csv")
+
+
 #==============================================================================
 # #==============================================================================
 # minus15=df5[-15.0].dropna().describe()
