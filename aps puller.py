@@ -11,7 +11,7 @@ import glob as glob
 import matplotlib.dates as mdates
 import datetime
 import matplotlib.pyplot as plt
-#import Organizer
+import Organizer
 
 Organized = 'O:\\Barbados_Data\\'
 os.chdir(Organized)

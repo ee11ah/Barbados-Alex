@@ -33,6 +33,8 @@ import matplotlib.dates as mdates
 import matplotlib.patches as patches
 from datetime import datetime
 import datetime as dt
+import Organizer
+
 #barbados
 indir = 'C:\\Users\\useradmin\\Desktop\\Barbados Data'
 
@@ -89,6 +91,10 @@ def get_data(dayfolder):
     global smps_counter, counter,df_smps
     global df_meta, notes_loc, notes_date, notes
     global dict_INPs, b
+    if b==[]:
+        no_bigN=1
+    else:
+        no_bigN=0
     if not a:
         no_data_flag=1
         print 'NIPI *Data.CSV files missing {}'.format(analysis_day)
@@ -125,7 +131,7 @@ def get_data(dayfolder):
       
     notes_loc = glob.glob(dayfolder+'/*note*.txt')
     for i in range(len(notes_loc)):
-        
+
         if notes_loc[i] == []:
             continue
         else:
@@ -150,7 +156,6 @@ def get_data(dayfolder):
     x=glob.glob('*.txt')
     for i in range(len(x)):
         #print x[i]
-        global x
         df_APSreader=pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 4:56] 
 #%%
         df_APSreader['datetime']=pd.to_datetime (pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 1]+" "+
@@ -159,7 +164,7 @@ def get_data(dayfolder):
     cols=df_APS.columns.tolist()
     cols = cols[-1:] + cols[:-1]
     df_APS=df_APS[cols]
-
+    df_APS['datetime'] = (df_APS['datetime'] + dt.timedelta(hours=-5))
 #Get the SUM
     apsavs=pd.DataFrame()
     aps_total =pd.DataFrame()
@@ -180,8 +185,8 @@ def get_data(dayfolder):
              
     
     frames1 = [apsavs, df_meta]
-
-    if no_data_flag==1:
+    print no_bigN
+    if no_bigN ==1:
 
         pass
     else:
@@ -295,20 +300,19 @@ for i in range(len(a)):
 #%%
 
 os.chdir(indir_INP)
-INPs = pd.read_csv('bigN_INPs at minus 10.csv',delimiter =',')
-INPs.dropna(axis =0, inplace = True)
-INPs.dropna(axis =0, inplace = True)
-
+INPs = pd.read_csv('bigN_INPs.csv',delimiter =',')
+#INPs.dropna(axis =0, inplace = True)
+#INPs.dropna(axis =0, inplace = True)
+temps = INPs.columns.values[2:]
 def timefix(time):
     
     correct_time = datetime.strptime(str((time)), '%Y-%m-%d %H:%M:%S')
     return correct_time
-#%% 4)Gets INP(T) calculated from INP_T script
+# 4)Gets INP(T) calculated from INP_T script
 
     
 INPs['start']=INPs['start'].apply(timefix)
 INPs['end_date']=INPs['end_date'].apply(timefix)
-
 
 df_out.reset_index(inplace = True)
 
@@ -327,10 +331,13 @@ for i in range(len(df_out)):
 if df_INP.empty:
         pass
 else:       
-    print 'INPs exist!'      
-    df_out['INPs'] =df_INP['INP']
+    print 'INPs exist!'
+    df_INP.set_index('start', inplace =True)
+    df_out.set_index('start', inplace =True)
+    df_out = df_out.join(df_INP)
 
 #df_out.dropna(axis=0, inplace = True)
+
 #%% 
 try:
     df_out['Date']=df_out.start.dt.date
@@ -346,32 +353,72 @@ try:
 except AttributeError:
     pass
 
+old_names= df_out.columns.values[5:]
+new_names = [old_names[i] + 'B' for i in range(len(old_names))]
+df_out.rename(columns=dict(zip(old_names, new_names)),inplace=True)
+df_out.drop(['index','end_date'], axis =1, inplace =True)
+df_out.reset_index(inplace =True)
+
+#%%IMPORT uL data
+os.chdir(indir_INP)
+uL_INPs = pd.read_csv('INPs.csv',delimiter =',')
+df_uINP=pd.DataFrame()
+
+
+for i in range(len(uL_INPs)):
+    uL_INPs['start'][i]=datetime.strptime(uL_INPs['start'][i], '%Y-%m-%d %H:%M:%S')
+    uL_INPs['end'][i]=datetime.strptime(uL_INPs['end'][i], '%Y-%m-%d %H:%M:%S')
+#for i in range(len(df_out)):
+for i in range(len(df_out)):
+        ulINP_mask=  (uL_INPs['start'] == df_out['start'][i]) & (uL_INPs['end'] ==  df_out['end'][i])
+        if INPs.loc[ulINP_mask].empty:
+            print 'empty'
+            continue
+        
+        else:
+            
+             df_uINP = df_uINP.append(uL_INPs.loc[ulINP_mask], ignore_index=True)
+
+if df_uINP.empty:
+        pass
+else:       
+    print 'INPs exist!'
+    df_uINP.set_index('start', inplace =True)
+    df_out.set_index('start', inplace =True, drop =True)
+    df_out = df_out.join(df_uINP, how='left', lsuffix='_left', rsuffix='_right')
+    df_out.drop('Unnamed: 0', inplace = True, axis =1)
+
 #%%5) Makes a pretty graph
-df_out.sort_values(by='start', inplace = True)
+df_out.sort_index( inplace = True)
+#df_APS.set_index('datetime', drop = True, inplace = True)
 fig, ax1 = plt.subplots()
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-line1, = ax1.plot(df_out['end'],df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle ='', marker='.') 
-line2, = ax1.plot(df_out['end'],df_out['APS'], color = 'green', label ='APS count',marker='.',linestyle =':')
+ax1.xaxis_date()
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+
+line1, = ax1.plot(df_out.index,df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle ='', marker='.') 
+line2, = ax1.plot(df_out.index,df_out['APS'], color = 'green', label ='APS count',marker='.',linestyle =':')
    
 
-end=np.asarray(df_out['end'])
-INP=np.asarray(df_out['INPs'])
+#end=np.asarray(df_out['end_left'])
+#INP=np.asarray(df_out['INPs'])
 
 
 
 ax1.set_ylabel('particles cm$^{-3}$')
 ax1.set_xlabel('Date')
-
+ax1.set_ylim(0, 60000)
 
 
 
 ax2= ax1.twinx()
-dots = ax2.scatter(end, INP, color = 'red', label = 'BigNipi @-10 '+degree_sign+'C',s=15 )
+dots = ax2.scatter(df_out.index.values, df_out.iloc[:,5].values, color = 'red', label = 'BigNipi @-10 '+degree_sign+'C',s=15 )
+dots1 = ax2.scatter(df_out.index.values, df_out.iloc[:,6].values, color = 'blue', label = 'BigNipi @-9 '+degree_sign+'C',s=15 )
+dots1 = ax2.scatter(df_out.index.values, df_out.iloc[:,7].values, color = 'black', label = 'BigNipi @-8 '+degree_sign+'C',s=15 )
 ax2.set_ylabel('INPs L$^{-1}$')
 ax2.set_yscale('log')
-ax2.set_ylim(0.1,10)
+ax2.set_ylim(0.1,100)
 ax1.legend(frameon= False)
-ax2.legend(loc = 'upper left', bbox_to_anchor = (0,0.865), frameon =False)
+ax2.legend(loc = 'upper right', bbox_to_anchor = (1.05,0.85), frameon =False)
 
 
 #ax1 = ax1.plot_date(df_out['end'],df_out['INPs'])[0]

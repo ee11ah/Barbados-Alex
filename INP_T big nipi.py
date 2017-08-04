@@ -55,7 +55,9 @@ keyword='bigN'
 
 percent = [0.2, 0.5, 0.8]
 degree_sign= u'\N{DEGREE SIGN}'
-num2words={-10: 'minus 10',-13: 'minus 13', -14 : 'minus 14' ,-15:'minus15',-16:'minus16',-17:'minus17',-18:'minus18',
+num2words={-7:'minus 7', -8: 'minus 8', -9:'minus 9', -10: 'minus 10', 
+           -11: 'minus 11', -13: 'minus 13', -14 : 'minus 14' ,
+           -15:'minus15',-16:'minus16',-17:'minus17',-18:'minus18',
            -19:'minus19',-20:'minus20',-21:'minus21',
            -22:'minus22', -23:'minus23', -24:'minus24',-25: 'minus25'}
 
@@ -95,8 +97,8 @@ for name in glob.glob(day_folder+'/*'):
 
 paths.sort()    
 number_days=len(paths)
-
-for T in range(-10,-9):
+T_list =range(-10,-7)
+for T in range(-10,-7):
     
     for i in range(len(paths)):
         extension = 'csv'
@@ -233,14 +235,18 @@ for i in range(len(df3)):
 for i in range(len(df3)):
     df3['end_date'][i] = datetime.datetime.combine(datetime.datetime.strptime(df3['end_date'][i],'%y%m%d'),datetime.datetime.strptime(df3['end_time'][i][0:6],'%H%M').time())
     
+df3.drop(labels = 'end_time', axis =1, inplace= True)
 
-df3.to_csv(out_folder+"bigN_INPs at " +num2words[T]+".csv")
+df_out=df3.pivot_table(index =['start','end_date'],columns='T', values = 'INP')
+
+df_out.to_csv(out_folder+"bigN_INPs.csv")
+
 #d3=df[df.INP!='inf'] 
 #df3.to_csv(out_folder+"INPs.csv")
 ax1=df3.plot.scatter(x='T', y='INP', logy=True)
 fig = ax1.get_figure()
 #fig.savefig(out_folder+keyword+'Binned INP')
-
+datez=df3[u'startdate', u'start', u'end_date'][0:Tcount]
 df4=(df3.iloc[:,[3,4]]).dropna(how='any')
 #df4.to_csv(out_folder+keyword+'.csv')
 df5=df4.pivot(index=None, columns='T', values='INP')
@@ -275,7 +281,7 @@ fig = ax2.get_figure()
 # plt.title('25 to 75% confidence intervals for INP data')
 # plt.xlabel('T')
 # plt.ylabel('INP')
-# plt.savefig(out_folder+keyword+'Boxplots')
+# pltsavefig(out_folder+keyword+'Boxplots')
 # INPs = pd.read_pickle(pickdir+'INPs.p')
 # #==============================================================================
 # 
