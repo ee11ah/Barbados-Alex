@@ -89,7 +89,7 @@ def get_data(dayfolder):
     b=glob.glob('bigN*.csv')##
     missing_NIPI=[]
     global smps_counter, counter,df_smps
-    global df_meta, notes_loc, notes_date, notes
+    global notes_loc, notes_date, notes
     global dict_INPs, b
     if b==[]:
         no_bigN=1
@@ -97,28 +97,30 @@ def get_data(dayfolder):
         no_bigN=0
     if not a:
         no_data_flag=1
-        print 'NIPI *Data.CSV files missing {}'.format(analysis_day)
+        print 'big NIPI *Data.CSV files missing {}'.format(analysis_day)
         missing_NIPI.append(analysis_day)
     else:    
         no_data_flag=0
         
         for i in range(len(b)):
-            print b
+            
             #start= a[i][5:11]+"_"+a[i][12:16]
             #end = a[i][5:11]+"_"+a[i][17:21]
             start= b[i][5:11]+"_"+b[i][12:16]
             end = b[i][5:11]+"_"+b[i][17:21]
-            print b[i][17:21]
+          
             start_datetime = datetime.strptime(start, '%y%m%d_%H%M')
         
             end_datetime =  datetime.strptime(end, '%y%m%d_%H%M')
             
             if 'ON' in b[i]:
                 end_datetime = (end_datetime + dt.timedelta(days=1))
-                print 'ON in filename'
+                print '1 day added'
+            elif '2N' in b[i]:
+                end_datetime = (end_datetime + dt.timedelta(days=2))
             else:
                end_datetime =  datetime.strptime(end, '%y%m%d_%H%M')
-            print ('end datetime is {}').format(end_datetime)   
+           
             global end_datetime, dt_end
             df_meta= df_meta.append(pd.DataFrame({'start':[start_datetime], 'end':[end_datetime]}),ignore_index = True)
             
@@ -126,24 +128,74 @@ def get_data(dayfolder):
             cols=df_meta.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             df_meta=df_meta[cols]
-            #print df_meta
+          
             global df_meta,B
       
-    notes_loc = glob.glob(dayfolder+'/*note*.txt')
-    for i in range(len(notes_loc)):
-
-        if notes_loc[i] == []:
-            continue
-        else:
-            text_read= open(notes_loc[0],'r')
-           
-            
-            notes_date.append(datetime.strptime(
-                    [notes_loc[0].replace(dayfolder,"")][0][0:6], '%y%m%d %h%M'))
-            note.append(text_read.read())
-           # print ('comment is {}'.format(note[i]))
+        #%%
+    c=glob.glob('Data*.csv')##
+    missing_uNIPI=[]
     
+    
+    if c==[]:
+        no_uL=1
+    else:
+        no_uL=0
+    if not c:
+        no_data_flag=1
+        print 'uL NIPI *Data.CSV files missing {}'.format(analysis_day)
+        missing_NIPI.append(analysis_day)
+    else:    
+        no_data_flag=0
+        
+        for i in range(len(c)):
+           
+            if 'Blan' in c[i]:
+                
+                continue
+
+            else:
+                
+                start= c[i][5:11]+"_"+c[i][17:21]
+                end = c[i][5:11]+"_"+c[i][22:26]
+             
+                start_datetime = datetime.strptime(start, '%y%m%d_%H%M')
+                
+                end_datetime =  datetime.strptime(end, '%y%m%d_%H%M')
+
+    
+                if 'ON' in c[i]:
+                    end_datetime = (end_datetime + dt.timedelta(days=1))
+                elif '2N' in c[i]:
+                    end_datetime = (end_datetime + dt.timedelta(days=2))
+       
+                else:
+                   end_datetime =  datetime.strptime(end, '%y%m%d_%H%M')
+  
+            df_meta= df_meta.append(pd.DataFrame({'start':[start_datetime], 'end':[end_datetime],'uL_file':c[i]}),ignore_index = True)
+            print "uL appending {} to df_meta".format(start_datetime)
+            #dict_INPs[start_datetime]=pd.read_csv(b[i], delimiter =",", header =0)
+            cols=df_meta.columns.tolist()
+            cols = cols[-1:] + cols[:-1]
+            df_meta=df_meta[cols]
+
+            global df_meta
             
+            #%%
+#==============================================================================
+# notes_loc = glob.glob(dayfolder+'/*note*.txt')
+# for i in range(len(notes_loc)):
+# 
+#     if notes_loc[i] == []:
+#         continue
+#     else:
+#         text_read= open(notes_loc[0],'r')
+#        
+#         
+#         notes_date.append(datetime.strptime(
+#                 [notes_loc[0].replace(dayfolder,"")][0][0:6], '%y%m%d %h%M'))
+#         note.append(text_read.read())
+#        # print ('comment is {}'.format(note[i]))
+#==============================================================================
 
    
 #APS SECTION
@@ -151,11 +203,11 @@ def get_data(dayfolder):
 
     
     os.chdir(dayfolder+'APS')
-    #print os.getcwd()
+
     global df_APS, df_out
     x=glob.glob('*.txt')
     for i in range(len(x)):
-        #print x[i]
+       
         df_APSreader=pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 4:56] 
 #%%
         df_APSreader['datetime']=pd.to_datetime (pd.read_csv(x[i], delimiter =',', header =6).iloc[:, 1]+" "+
@@ -175,8 +227,8 @@ def get_data(dayfolder):
         
         aps_mask=  (df_APS['datetime'] > df_meta['start'][i]) & (df_APS['datetime'] <=  df_meta['end'][i])
         if df_APS.loc[aps_mask]['datetime'].empty:
-            #print 'aps mask not working'
-            #apsavs.append(pd.DataFrame(x))
+            
+
             continue
         
         else:
@@ -185,18 +237,19 @@ def get_data(dayfolder):
              
     
     frames1 = [apsavs, df_meta]
-    print no_bigN
-    if no_bigN ==1:
 
+
+    apsavs = pd.concat (frames1, axis =1, ignore_index= False, join= 'outer')
+    
+    aps_total= aps_total.append(apsavs.sum(axis=1),ignore_index=True)
+    print aps_total
+    print 'aps total is'.format(aps_total)
+    cols=apsavs.columns.tolist()
+    cols = cols[-2:] + cols[:-2]
+    apsavs = apsavs[cols]
+    if aps_total.empty:
         pass
     else:
-        #print 'else'
-        apsavs = pd.concat (frames1, axis =1, ignore_index= False, join= 'outer')
-        aps_total= aps_total.append(apsavs.sum(axis=1),ignore_index=True)
-        #print aps_total
-        cols=apsavs.columns.tolist()
-        cols = cols[-2:] + cols[:-2]
-        apsavs = apsavs[cols]
         df_meta['APS']= aps_total.T
          
 #SMPS Section
@@ -233,21 +286,19 @@ def get_data(dayfolder):
                 df_smps = df_smps.append(df, ignore_index=True)
                 
                 datetimes = df_smps['datetime']
-               #print datetimes
+             
             df_smps.drop('datetime', axis =1, inplace = True)
             df_smps = df_smps.iloc[:,1:].astype(float)
             df_smps.insert(0,'datetimes', datetimes)
-           # df_smps.iloc[0:, 1:] = df_smps.iloc[0:, 1:].astype(float)
+          
 #%%
 #Averaging (should be SUM????)
     smps_avs = pd.DataFrame()
     smps_total=pd.DataFrame()
     
     for i in range (1,2):
-        
-        #print "length df_meta is {}".format(len(df_meta))
-       
-        #print "number of cycles is {}".format(i) 
+
+
         if df_smps.empty:
             continue
         else: 
@@ -260,7 +311,7 @@ def get_data(dayfolder):
             
            
     smps_total = smps_total.append(smps_avs.sum(axis=1), ignore_index=True).T
-    #print smps_total
+
     smps_total.columns=['SMPS_total']
     
     cols=smps_avs.columns.tolist()
@@ -268,8 +319,7 @@ def get_data(dayfolder):
     smps_avs = smps_avs[cols]
     df_meta['SMPS']= smps_total
             
-            #print "smps total count is {}".format(smps_total.tail(1))
-                 #print 'Warning: SMPS averages is zero for {}'.format(dayfolder)
+     
     
     return (df_meta)
 #%%   LOOPS get_data function         
@@ -284,7 +334,7 @@ for i in range(len(a)):
     df_meta=pd.DataFrame()
     
     #pdb.set_trace()
-    print dayfolder
+
     get_data(dayfolder)
     df_out=df_out.append(df_meta)
 #%%
@@ -334,8 +384,9 @@ else:
     print 'INPs exist!'
     df_INP.set_index('start', inplace =True)
     df_out.set_index('start', inplace =True)
-    df_out = df_out.join(df_INP)
-
+    x = df_out.loc[df_out.uL_file.isnull()].join(df_INP, how = 'left')
+    y =df_out.loc[df_out.uL_file.notnull()]
+    test=x.append(y)
 #df_out.dropna(axis=0, inplace = True)
 
 #%% 
@@ -356,14 +407,14 @@ except AttributeError:
 old_names= df_out.columns.values[5:]
 new_names = [old_names[i] + 'B' for i in range(len(old_names))]
 df_out.rename(columns=dict(zip(old_names, new_names)),inplace=True)
-df_out.drop(['index','end_date'], axis =1, inplace =True)
+df_out.drop(['index'], axis =1, inplace =True)
 df_out.reset_index(inplace =True)
 
 #%%IMPORT uL data
 os.chdir(indir_INP)
 uL_INPs = pd.read_csv('INPs.csv',delimiter =',')
 df_uINP=pd.DataFrame()
-
+df_out.reset_index(inplace = True)
 
 for i in range(len(uL_INPs)):
     uL_INPs['start'][i]=datetime.strptime(uL_INPs['start'][i], '%Y-%m-%d %H:%M:%S')
@@ -371,7 +422,7 @@ for i in range(len(uL_INPs)):
 #for i in range(len(df_out)):
 for i in range(len(df_out)):
         ulINP_mask=  (uL_INPs['start'] == df_out['start'][i]) & (uL_INPs['end'] ==  df_out['end'][i])
-        if INPs.loc[ulINP_mask].empty:
+        if uL_INPs.loc[ulINP_mask].empty:
             print 'empty'
             continue
         
@@ -385,8 +436,8 @@ else:
     print 'INPs exist!'
     df_uINP.set_index('start', inplace =True)
     df_out.set_index('start', inplace =True, drop =True)
-    df_out = df_out.join(df_uINP, how='left', lsuffix='_left', rsuffix='_right')
-    df_out.drop('Unnamed: 0', inplace = True, axis =1)
+    #df_out = df_out.join(df_uINP, how='left', lsuffix='_left', rsuffix='_right')
+    #df_out.drop('Unnamed: 0', inplace = True, axis =1)
 
 #%%5) Makes a pretty graph
 df_out.sort_index( inplace = True)
@@ -395,7 +446,7 @@ fig, ax1 = plt.subplots()
 ax1.xaxis_date()
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
 
-line1, = ax1.plot(df_out.index,df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle ='', marker='.') 
+#line1, = ax1.plot(df_out.index,df_out['SMPS'], color = 'blue', label ='SMPS count', linestyle ='', marker='.') 
 line2, = ax1.plot(df_out.index,df_out['APS'], color = 'green', label ='APS count',marker='.',linestyle =':')
    
 
@@ -406,17 +457,18 @@ line2, = ax1.plot(df_out.index,df_out['APS'], color = 'green', label ='APS count
 
 ax1.set_ylabel('particles cm$^{-3}$')
 ax1.set_xlabel('Date')
-ax1.set_ylim(0, 60000)
+ax1.set_ylim(0, 150000)
 
 
 
 ax2= ax1.twinx()
-dots = ax2.scatter(df_out.index.values, df_out.iloc[:,5].values, color = 'red', label = 'BigNipi @-10 '+degree_sign+'C',s=15 )
-dots1 = ax2.scatter(df_out.index.values, df_out.iloc[:,6].values, color = 'blue', label = 'BigNipi @-9 '+degree_sign+'C',s=15 )
-dots1 = ax2.scatter(df_out.index.values, df_out.iloc[:,7].values, color = 'black', label = 'BigNipi @-8 '+degree_sign+'C',s=15 )
+
+dots1 = ax2.scatter(test.index.values, test.iloc[:,0].values, color = 'blue', label = 'BigNipi @-9 '+degree_sign+'C',s=15 )
+#dots1 = ax2.scatter(df_out.index.values, df_out.iloc[:,7].values, color = 'black', label = 'BigNipi @-8 '+degree_sign+'C',s=15 )
+dots1= ax2.scatter(df_uINP.index.values, df_uINP.iloc[:,5].values, color ='red', label ='uL_NIPI at @-17'+degree_sign+'C',s=15)
 ax2.set_ylabel('INPs L$^{-1}$')
 ax2.set_yscale('log')
-ax2.set_ylim(0.1,100)
+ax2.set_ylim(0.001,300)
 ax1.legend(frameon= False)
 ax2.legend(loc = 'upper right', bbox_to_anchor = (1.05,0.85), frameon =False)
 
