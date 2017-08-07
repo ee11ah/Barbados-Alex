@@ -62,7 +62,7 @@ bigN_files = [i for i in  glob.glob('*bigN*.csv*')]
 bigN_dates = [i[5:11] for i in bigN_files]
 bigN_dates= list(set(bigN_dates))
 
-#%%
+#%%Pulls big N files, calculates INPs
 for i in range(len(bigN_files)):
     dt_start = datetime.datetime.strptime(bigN_files[i][5:16],'%y%m%d %H%M')
     d_start = datetime.datetime.strptime(bigN_files[i][5:11], '%y%m%d')
@@ -76,7 +76,9 @@ for i in range(len(bigN_files)):
         
     c = dt_end-dt_start
     t_run = divmod(c.days * 86400 + c.seconds, 60)
-    runtime=-t_run[0]
+    print ('t_run is {}').format(t_run)
+    runtime=t_run[0]
+    print ('runtime is {}').format(runtime)
     flow = 16.7
     washV = 5
     Vdrop = 0.05
@@ -139,7 +141,7 @@ uL_folders =[i for i in glob.glob('*//')]
 #         
 #==============================================================================
         
-#%%
+#%% Scans for uL *data files
 
 
 for i in range(len(bigN_dates)):
@@ -199,7 +201,7 @@ big_N = pd.DataFrame([[i,j] for i,j in zip(big_start, big_end)])
 uL_dt = pd.DataFrame([[i,j] for [i,j] in zip(uL_start_list, uL_end_list)])
 bigNlocs=pd.DataFrame(bigNlocs)
     
-#%%
+#%% Checks for uL NIPI and big NIPI taken at the same time
 for i in range(len(uL_dt)):
     mask = (uL_dt.iloc[i,0] == big_N.iloc[:,0]) & (uL_dt.iloc[i,1] == big_N.iloc[:,1])
     big = bigNlocs.loc[mask]
@@ -236,7 +238,59 @@ for i in range(len(uL_dt)):
             plt.legend()
             
             
-            
+#==============================================================================
+# #%% Scans all folders in organized and plots
+# 
+# topfolder='O:\\Barbados_Data\\'
+# 
+# bigN_list =[]
+# bigN_data = pd.DataFrame(columns = {'T', 'INP'})
+# 
+# 
+# uL_list =[]
+# uL_data = pd.DataFrame(columns = {'T', 'INP'})
+# 
+# 
+# os.chdir(topfolder)
+# folders = glob.glob('*\\')
+# loc = []
+# for i in range(len(folders)):
+#     os.chdir(topfolder+ folders[i])
+#     z=folders[i]
+#     if glob.glob('*bigN*.csv') ==[]:
+#         continue
+#     else:
+#         
+#         x=[topfolder+ z+ j for j in glob.glob('*bigN*.csv')]
+#         bigN_list.extend(x)
+#         
+# for i in range(len(folders)):
+#     os.chdir(topfolder+ folders[i])
+#     z=folders[i]       
+#         
+#     if glob.glob('*Data*.csv') ==[]:
+#         continue
+#     else:
+#         
+#         y=[topfolder+ z+ j for j in glob.glob('*Data*.csv')]
+#         uL_list.extend(y)
+# 
+# for i in range (len(bigN_list)):
+#     y=pd.read_csv(bigN_list[i], names=['T', 'INP'])
+#     bigN_data = bigN_data.append(y, ignore_index = True)
+# for i in range (len(uL_list)):
+#     y=pd.read_csv(uL_list[i], names=['T', 'INP'], usecols = [0,1], skiprows=1)
+#     uL_data = uL_data.append(y, ignore_index = True)
+#      
+# fig =plt.plot()
+# plt.scatter(bigN_data['T'], bigN_data['INP'])
+# 
+# plt.scatter(uL_data['T'], uL_data['INP'])
+# plt.yscale('log')
+# plt.ylim(0.0001,30)            
+#             
+#             
+#==============================================================================
 
 
 

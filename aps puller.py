@@ -39,7 +39,8 @@ line1, = ax1.plot(df_APS.index, df_APS['Total'])
 ax1.set_ylabel('APS particles cm$^{-3}$')
 ax1.set_xlabel('Date')
 
-
+resample = df_APS.resample('1H', how = 'SUm)
+resample.to_csv(Organized + 'all_APS.csv')
 
 #==============================================================================
 # #%%df_APS['Total'] = df_APS.iloc[:,0:52].sum(axis =1)
