@@ -226,7 +226,13 @@ for i in range(len(uL_dt)):
             t_run = divmod(c.days * 86400 + c.seconds, 60)
             runtime=t_run[0]
             flow = 16.7
-            washV = 5
+            washV = bigN_files[i].find('ml')
+            if washV != -1:
+                bigN_files[i][(int(washV)-1)] # only single digit numbers for this in name
+            else:
+                print "\n No wash off volume found in name! \n This code will assume it is 10ml. please change if it is not!\n"
+                washV = 10
+                pass
             Vdrop = 0.05
             divisor = Vdrop/washV*flow*runtime
             bigdata = pd.read_csv(big.iloc[0].tolist()[0], names=['temp'])
