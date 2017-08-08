@@ -80,7 +80,13 @@ for i in range(len(bigN_files)):
     runtime=t_run[0]
     print ('runtime is {}').format(runtime)
     flow = 16.7
-    washV = 5
+    washV = bigN_files[i].find('ml')
+    if washV != -1:
+        bigN_files[i][(int(washV)-1)] # only single digit numbers for this in name
+    else:
+        print "\n No wash off volume found in name! \n This code will assume it is 10ml. please change if it is not!\n"
+        washV = 10
+        pass
     Vdrop = 0.05
     divisor = Vdrop/washV*flow*runtime
     big_start.append(dt_start)
