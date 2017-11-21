@@ -32,10 +32,16 @@ for root, dirs, files in os.walk(path):
             df['FFS']=df.event_number/b
             df['NuT/Na']= (b-df.event_number)/b
             df['INP per Liter'] = 0
+            del df['event_number']
+            del df ['?']
+            df['start time'] = bb[12:14]+ ':' + bb[14:16]
+            df['start time'] = pd.to_datetime(df['start time'], format='%H:%M').dt.time
+            df['end time'] = bb[17:19] + ':' + bb[19:21]
+            df['end time'] = pd.to_datetime(df['end time'], format='%H:%M').dt.time
+            print bb
+
             #df.to_csv(file, delimiter=',')
             
-            print c
-            print a
             print df.head()
             
 
