@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-
+BigNfiles = []
 #read in aps and met data
 path = 'C:\Users\ee11ah\Desktop\Barbados_Data\\'
 for root, dirs, files in os.walk(path):
@@ -23,6 +23,13 @@ for root, dirs, files in os.walk(path):
             a =os.path.relpath(root) +'\\'
             b = file
             a = a+b
-            df = pd.read_csv(a)
+            BigNfiles.append(a)
+            df = pd.read_csv(a, names = ["Temps", "?"])
+            #df['Temps']= df(c0)
+            df['NuT/Na']= 0
+            print df.head()
+
+            
+    
 
             
