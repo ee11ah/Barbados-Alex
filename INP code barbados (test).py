@@ -20,6 +20,9 @@ path = 'C:\Users\ee11ah\Desktop\Barbados_Data\\'
 for root, dirs, files in os.walk(path):
     for file in files:
         if file.startswith('big'):
-            a = file
-            a
+            a =os.path.relpath(root) +'\\'
+            b = file
+            a = a+b
+            df = pd.read_csv(a)
+
             
