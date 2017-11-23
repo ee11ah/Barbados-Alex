@@ -41,11 +41,38 @@ for root, dirs, files in os.walk(path):
             del df['event_number']
             del df ['?']
             #takes the time from the file names and converts them to a time object for pandas
-            df['start time'] = '20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[12:14]+ ':' + bb[14:16]
-            df['start time'] = pd.to_datetime(df['start time'])
-            df['end time'] ='20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[17:19] + ':' + bb[19:21]
-            df['end time'] = pd.to_datetime(df['end time'])
-            df['time sampled'] = df['end time'] - df['start time']
+            df['time sampled'] =((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
+            stm=((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
+            df['time sampled'] = stm
+            df['liters of air']=16.7*stm
+            ON=bb.find("ON")
+            twoN=bb.find("2N")
+            if ON != -1:
+                stm=((24*60)-((int(bb[12:14])*60)+int(bb[14:16]))) 
+                mte=((int(bb[17:19])*60)+int(bb[19:21]))
+                df['time sampled']=stm+mte
+                df['liters of air']=16.7*df['time sampled']
+            if twoN != -1:
+                stm=((24*60)-((int(bb[12:14])*60)+int(bb[14:16]))) 
+                mte=((int(bb[17:19])*60)+int(bb[19:21]))
+                df['time sampled']=stm+mte+(24*60)
+                df['liters of air']=16.7*['time sampled']
+            else:
+                pass
+
+                    
+            #df['start time'] = '20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[12:14]+ ':' + bb[14:16]
+           # df['start time'] = pd.to_datetime(df['start time'])
+           # df['end time'] ='20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[17:19] + ':' + bb[19:21]
+            #df['end time'] = pd.to_datetime(df['end time'])
+            #gets the time sampled
+            #df['time sampled'] = df['end time'] - df['start time']
+            #def tt (spilt):
+                #split = df['time sampled'].split(':')
+                #return int(split[0])*1440 + int(split[1]) + (intsplit([2])*0)
+                #df['time sampled'] = tt
+            
+          
             print bb
             
 
