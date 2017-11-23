@@ -36,15 +36,17 @@ for root, dirs, files in os.walk(path):
             df['event_number']= c
             df['FFS']=df.event_number/b
             df['NuT/Na']= (b-df.event_number)/b
-            df['INP per Liter'] = 0
+            #df['INP per Liter'] = 0
             #delets unneccesary coloumns
             del df['event_number']
             del df ['?']
             #takes the time from the file names and converts them to a time object for pandas
-            df['start time'] = bb[12:14]+ ':' + bb[14:16]
-            df['start time'] = pd.to_datetime(df['start time'], format='%H:%M').dt.time
-            df['end time'] = bb[17:19] + ':' + bb[19:21]
-            df['end time'] = pd.to_datetime(df['end time'], format='%H:%M').dt.time
+            df['start time'] = '20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[12:14]+ ':' + bb[14:16]
+            df['start time'] = pd.to_datetime(df['start time'])
+            df['end time'] ='20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[17:19] + ':' + bb[19:21]
+            df['end time'] = pd.to_datetime(df['end time'])
+            df['time sampled'] = df['end time'] - df['start time']
+            print bb
             
 
             #df.to_csv(file, delimiter=',')
