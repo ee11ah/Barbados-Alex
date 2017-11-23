@@ -35,30 +35,54 @@ for root, dirs, files in os.walk(path):
             #creates new coloumns for calculations
             df['event_number']= c
             df['FFS']=df.event_number/b
-            df['NuT/Na']= (b-df.event_number)/b
+            df['NuT']= (b-df.event_number)/b
             #df['INP per Liter'] = 0
             #delets unneccesary coloumns
             del df['event_number']
             del df ['?']
-            #takes the time from the file names and converts them to a time object for pandas
+            #takes the time from the file names and converts them to a time difference time in minutes
             df['time sampled'] =((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
             stm=((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
             df['time sampled'] = stm
-            df['liters of air']=16.7*stm
+            #calculates the volume of air sampled
+            df['volume_air']=16.7*stm
+            # adds further time on if the run was done over night
             ON=bb.find("ON")
             twoN=bb.find("2N")
             if ON != -1:
                 stm=((24*60)-((int(bb[12:14])*60)+int(bb[14:16]))) 
                 mte=((int(bb[17:19])*60)+int(bb[19:21]))
                 df['time sampled']=stm+mte
-                df['liters of air']=16.7*df['time sampled']
+                df['volume_air']=16.7*df['time sampled']
             if twoN != -1:
                 stm=((24*60)-((int(bb[12:14])*60)+int(bb[14:16]))) 
                 mte=((int(bb[17:19])*60)+int(bb[19:21]))
                 df['time sampled']=stm+mte+(24*60)
-                df['liters of air']=16.7*['time sampled']
+                df['volume_air']=16.7*['time sampled']
             else:
                 pass
+            df['INP']=-np.log((df.NuT))*(float(10)/(0.05*df.volume_air))
+            #df.to_csv('NEW' + bb)           
+            
+            
+folder = 'C:\Users\ee11ah\Desktop\Barbados_Data_Test\\'
+for root, dirs, files in os.walk(folder):
+    for file in files:
+        for file in files:
+        #Created files
+            plt.figure(1)
+            if file.startswith('NEW'):
+                a =os.path.relpath(root) +'\\'
+                bb = file
+                a = a+bb
+                df = pd.read_csv(a)
+                plt.scatter(df.Temps, df.INP)
+                plt.title('INP per liter Barbados')
+                plt.ylabel('INP per liter')
+                plt.yscale('log')
+                plt.xlabel('Temperature degrees celsius')
+plt.show(1)
+
 
                     
             #df['start time'] = '20' + bb[5:7] + '-' + bb[7:9] + '-' + bb[9:11] + ' ' + bb[12:14]+ ':' + bb[14:16]
@@ -73,12 +97,13 @@ for root, dirs, files in os.walk(path):
                 #df['time sampled'] = tt
             
           
-            print bb
+            #print bb
             
 
             #df.to_csv(file, delimiter=',')
             
-            print df.head()
+            #print df.head()
+
             
 
             
