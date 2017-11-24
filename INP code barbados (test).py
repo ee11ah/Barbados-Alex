@@ -16,7 +16,7 @@ import os
 
 BigNfiles = []
 #read in big nipi data 
-path = 'C:\Users\ee11ah\Desktop\Barbados_Data\\'
+path = 'C:\\Users\\ee11ah\\Desktop\\allBN\\'
 for root, dirs, files in os.walk(path):
     for file in files:
         #looks for big nipi files
@@ -36,16 +36,27 @@ for root, dirs, files in os.walk(path):
             df['event_number']= c
             df['FFS']=df.event_number/b
             df['NuT']= (b-df.event_number)/b
-            #df['INP per Liter'] = 0
             #delets unneccesary coloumns
             del df['event_number']
             del df ['?']
             #takes the time from the file names and converts them to a time difference time in minutes
-            df['time sampled'] =((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
-            stm=((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
-            df['time sampled'] = stm
+            handling = bb.find("Handling")
+            blank = bb.find("blank")
+            Blank = bb.find("Blank")
+            Blan = bb.find("Blan")
+            if handling != -1:
+                df['time_sampled'] = 1
+                df['volume_air']=16.7*1
+            elif blank != -1 or Blank != -1 or Blan != -1:
+                df['time_sampled'] = 1
+                df['volume_air']=16.7*1
+                
+            else:
+                #df['time_sampled'] =((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16])))
+                stm=((int(bb[17:19])-int(bb[12:14]))*60)-(((int(bb[19:21])))-((int(bb[14:16]))))
+                df['time sampled'] = stm
             #calculates the volume of air sampled
-            df['volume_air']=16.7*stm
+                df['volume_air']=16.7*stm
             # adds further time on if the run was done over night
             ON=bb.find("ON")
             twoN=bb.find("2N")
@@ -62,26 +73,28 @@ for root, dirs, files in os.walk(path):
             else:
                 pass
             df['INP']=-np.log((df.NuT))*(float(10)/(0.05*df.volume_air))
-            #df.to_csv('NEW' + bb)           
+            df.to_csv('NEW' + bb)     
+            print bb
+            print df.head()
             
             
-folder = 'C:\Users\ee11ah\Desktop\Barbados_Data_Test\\'
-for root, dirs, files in os.walk(folder):
-    for file in files:
-        for file in files:
+#folder = 'C:\Users\ee11ah\Desktop\Barbados_Data_Test\\'
+#for root, dirs, files in os.walk(folder):
+    #for file in files:
+       # for file in files:
         #Created files
-            plt.figure(1)
-            if file.startswith('NEW'):
-                a =os.path.relpath(root) +'\\'
-                bb = file
-                a = a+bb
-                df = pd.read_csv(a)
-                plt.scatter(df.Temps, df.INP)
-                plt.title('INP per liter Barbados')
-                plt.ylabel('INP per liter')
-                plt.yscale('log')
-                plt.xlabel('Temperature degrees celsius')
-plt.show(1)
+           # plt.figure(1)
+           # if file.startswith('NEW'):
+               # a =os.path.relpath(root) +'\\'
+               # bb = file
+                #a = a+bb
+                #df = pd.read_csv(a)
+                #plt.scatter(df.Temps, df.INP)
+                #plt.title('INP per liter Barbados')
+                #plt.ylabel('INP per liter')
+                #plt.yscale('log')
+                #plt.xlabel('Temperature degrees celsius')
+#plt.show(1)
 
 
                     

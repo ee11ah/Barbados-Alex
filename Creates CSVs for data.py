@@ -23,11 +23,11 @@ import os
 
 BigNfiles = []
 #read in big nipi data 
-path = 'C:\Users\ee11ah\Desktop\Barbados_Data\\'
+path = 'C:\Users\ee11ah\Desktop\all_big_NIPI\\'
 for root, dirs, files in os.walk(path):
     for file in files:
         #looks for big nipi files
-        if file.startswith('big'):
+        if file.startswith('bigN'):
             a =os.path.relpath(root) +'\\'
             bb = file
             a = a+bb
@@ -35,6 +35,7 @@ for root, dirs, files in os.walk(path):
             BigNfiles.append(a)
             #adds the column titles
             df = pd.read_csv(a, names = ["Temps", "?"])
+            print df.head()
             #gets len of the column for calculation
             b = len(df.Temps)
             #uses index number to get event numbers
@@ -73,4 +74,4 @@ for root, dirs, files in os.walk(path):
             else:
                 df['INP']=-np.log((df.NuT))*(float(10)/(0.05*df.volume_air))
                 df['volUsed']=10
-            df.to_csv('NEW' + bb)           
+            df.to_csv('NEW' + bb)     
