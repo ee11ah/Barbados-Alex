@@ -25,9 +25,10 @@ for root, dirs, files in os.walk(folder):
                 a = a+bb
                 df = pd.read_csv(a)
                 #df = pd.read_csv(a, names = ['Temps', 'INP', 'ff', 'K'])
-                blan = bb.find("Blan")
-                blank =bb.find("blan")
-                if blan != -1 and blank != -1:
+                blank = bb.find("blank")
+                Blank = bb.find("Blank")
+                Blan = bb.find("Blan")
+                if Blan != -1 or blank != -1 or Blank != -1:
                     pass
                 else:
                     plt.scatter(df.Temps, df.INP)
