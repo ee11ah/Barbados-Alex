@@ -41,15 +41,26 @@ for root, dirs, files in os.walk(folder):
                         for root, dirs, files in os.walk(folder):
                             for file in files:
                                 if file.endswith(dates+'.csv'):
-                                    plt.figure(num)
+                                    fig = plt.figure(num)
                                     a =os.path.relpath(root) +'\\'
                                     bb = file
                                     a = a+bb
                                     df = pd.read_csv(a)
-                                    plt.scatter(df.Temps, df.FFS)
-                                    plt.title('INP per liter Barbados' + date)
-                                    plt.ylabel('FFS')
-                                    plt.xlabel('Temperature degrees celsius')
+                                    blank = bb.find("blank")
+                                    Blank = bb.find("Blank")
+                                    Blan = bb.find("Blan")
+                                    if Blan != -1 or blank != -1 or Blank != -1:
+                                        plt.scatter(df.Temps, df.FFS,color="K")
+                                        plt.title('INP per liter Barbados' + date)
+                                        plt.ylabel('FFS')
+                                        plt.xlabel('Temperature degrees celsius')
+                                    else:
+                                        plt.scatter(df.Temps, df.FFS)
+                                        plt.title('INP per liter Barbados' + date)
+                                        plt.ylabel('FFS')
+                                        plt.xlabel('Temperature degrees celsius')
+                                    fig.savefig('backgrounds vs data ' + date)
+
                                     
                 
                 #else:
