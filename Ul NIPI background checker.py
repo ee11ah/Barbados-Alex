@@ -54,7 +54,7 @@ for root, dirs, files in os.walk(path):
                             plt.title('fraction frozen, Barbados' + day)
                             plt.ylabel('FFS')
                             plt.xlabel('Temperature degrees celsius')
-                            #fig.savefig('backgrounds vs data ' + day)
+                        fig.savefig('backgrounds vs data (ul) ' + day)
             #plt.show()
                         
 
