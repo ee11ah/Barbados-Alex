@@ -12,6 +12,15 @@ Created on Mon Nov 27 16:06:56 2017
 @author: ee11ah
 """
 
+import pandas as pd
+from pandas import DataFrame
+import datetime
+import csv
+import sys
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
 path = 'C:\\Users\\ee11ah\\Desktop\\Barbados_Data\\'
 num = 0
 fig = plt.figure(num)
